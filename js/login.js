@@ -2,7 +2,6 @@
 // username: brucewayne
 // senha:    gotham
 
-// aguarda o DOM carregar
 document.addEventListener("DOMContentLoaded", () => {
   // declara variável form
   const form      = document.getElementById("loginForm");
