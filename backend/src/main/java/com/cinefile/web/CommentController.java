@@ -32,13 +32,15 @@ public class CommentController {
         return comments.findAllByMediaTypeAndTmdbIdOrderByCreatedAtDesc(mt, tmdbId)
                 .stream()
                 .limit(l)
-                .map(c -> Map.of(
-                        "id", c.getId(),
-                        "text", c.getText(),
-                        "createdAt", c.getCreatedAt(),
-                        "username", c.getUser().getUsername(),
-                        "own", me != null && c.getUser().getId().equals(me.getId())
-                ))
+                .map(c -> {
+                    java.util.Map<String,Object> m = new java.util.HashMap<>();
+                    m.put("id", c.getId());
+                    m.put("text", c.getText());
+                    m.put("createdAt", c.getCreatedAt());
+                    m.put("username", c.getUser().getUsername());
+                    m.put("own", me != null && c.getUser().getId().equals(me.getId()));
+                    return m;
+                })
                 .toList();
     }
 

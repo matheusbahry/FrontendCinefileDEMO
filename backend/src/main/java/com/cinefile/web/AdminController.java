@@ -22,13 +22,15 @@ public class AdminController {
 
     @GetMapping("/users")
     public List<Map<String,Object>> listUsers() {
-        return users.findAll().stream().map(u -> Map.of(
-                "id", u.getId(),
-                "username", u.getUsername(),
-                "email", u.getEmail(),
-                "role", u.getRole(),
-                "createdAt", u.getCreatedAt()
-        )).toList();
+        return users.findAll().stream().map(u -> {
+            java.util.Map<String,Object> m = new java.util.HashMap<>();
+            m.put("id", u.getId());
+            m.put("username", u.getUsername());
+            m.put("email", u.getEmail());
+            m.put("role", u.getRole());
+            m.put("createdAt", u.getCreatedAt());
+            return m;
+        }).toList();
     }
 
     public record RoleReq(@NotBlank String role) {}
