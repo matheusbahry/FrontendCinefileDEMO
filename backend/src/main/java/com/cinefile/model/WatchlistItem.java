@@ -1,5 +1,6 @@
 package com.cinefile.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class WatchlistItem {
     private Long id;
 
     @ManyToOne(optional = false)
+    @JsonIgnore
     private User user;
 
     @Enumerated(EnumType.STRING)
@@ -29,4 +31,3 @@ public class WatchlistItem {
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 }
-

@@ -1,5 +1,6 @@
 package com.cinefile.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class SeasonRating {
     private Long id;
 
     @ManyToOne(optional = false)
+    @JsonIgnore
     private User user;
 
     @Column(nullable = false)
@@ -31,4 +33,3 @@ public class SeasonRating {
     @Column(nullable = false)
     private Instant updatedAt = Instant.now();
 }
-
