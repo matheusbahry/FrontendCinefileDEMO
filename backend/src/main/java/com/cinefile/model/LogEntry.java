@@ -2,9 +2,6 @@ package com.cinefile.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.Instant;
 
@@ -13,7 +10,6 @@ import java.time.Instant;
         @Index(name="ix_logs_user", columnList = "user_id,ts"),
         @Index(name="ix_logs_media", columnList = "mediaType,tmdbId")
 })
-@Getter @Setter @NoArgsConstructor
 public class LogEntry {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,5 +34,20 @@ public class LogEntry {
 
     @Column(length = 500)
     private String details;
-}
 
+    public LogEntry() {}
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public ActionType getAction() { return action; }
+    public void setAction(ActionType action) { this.action = action; }
+    public MediaType getMediaType() { return mediaType; }
+    public void setMediaType(MediaType mediaType) { this.mediaType = mediaType; }
+    public Long getTmdbId() { return tmdbId; }
+    public void setTmdbId(Long tmdbId) { this.tmdbId = tmdbId; }
+    public Instant getTs() { return ts; }
+    public void setTs(Instant ts) { this.ts = ts; }
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
+}

@@ -2,9 +2,6 @@ package com.cinefile.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.Instant;
 
@@ -12,7 +9,6 @@ import java.time.Instant;
 @Table(name = "season_ratings", indexes = {
         @Index(name="ix_season_rating_unique", columnList = "user_id,tmdbId,seasonNumber", unique = true)
 })
-@Getter @Setter @NoArgsConstructor
 public class SeasonRating {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,4 +28,18 @@ public class SeasonRating {
 
     @Column(nullable = false)
     private Instant updatedAt = Instant.now();
+
+    public SeasonRating() {}
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public Long getTmdbId() { return tmdbId; }
+    public void setTmdbId(Long tmdbId) { this.tmdbId = tmdbId; }
+    public Integer getSeasonNumber() { return seasonNumber; }
+    public void setSeasonNumber(Integer seasonNumber) { this.seasonNumber = seasonNumber; }
+    public Integer getStars() { return stars; }
+    public void setStars(Integer stars) { this.stars = stars; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

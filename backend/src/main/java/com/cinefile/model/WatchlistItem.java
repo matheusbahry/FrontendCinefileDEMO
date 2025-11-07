@@ -2,9 +2,6 @@ package com.cinefile.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.Instant;
 
@@ -12,7 +9,6 @@ import java.time.Instant;
 @Table(name = "watchlist", indexes = {
         @Index(name="ix_watchlist_user_media", columnList = "user_id,mediaType,tmdbId", unique = true)
 })
-@Getter @Setter @NoArgsConstructor
 public class WatchlistItem {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,4 +26,16 @@ public class WatchlistItem {
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
+
+    public WatchlistItem() {}
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public MediaType getMediaType() { return mediaType; }
+    public void setMediaType(MediaType mediaType) { this.mediaType = mediaType; }
+    public Long getTmdbId() { return tmdbId; }
+    public void setTmdbId(Long tmdbId) { this.tmdbId = tmdbId; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
