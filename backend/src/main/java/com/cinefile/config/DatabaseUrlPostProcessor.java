@@ -53,6 +53,8 @@ public class DatabaseUrlPostProcessor implements EnvironmentPostProcessor {
             map.put("spring.datasource.url", jdbc);
             if (user != null) map.put("spring.datasource.username", user);
             if (pass != null) map.put("spring.datasource.password", pass);
+            // Enable schema update only when a DB URL is present
+            map.put("spring.jpa.hibernate.ddl-auto", "update");
             environment.getPropertySources().addFirst(new MapPropertySource("cinefile-dburl", map));
         } catch (Exception ignored) { }
     }
@@ -62,4 +64,3 @@ public class DatabaseUrlPostProcessor implements EnvironmentPostProcessor {
         return null;
     }
 }
-
