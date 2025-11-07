@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="details__meta">${item.year} • ${typeLabel}</div>
 
       <div class="rating" id="ratingStars" aria-label="Avalie de 1 a 5 estrelas" role="radiogroup"></div>
+      <div id="avgRatingBox" class="muted" style="margin-top:6px"></div>
 
       <div class="details__actions">
         <button class="btn auth-action" id="btnWatchlist" aria-pressed="false">+ Watchlist</button>
@@ -114,18 +115,43 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch {}
   })();
 
-  // Marcar como assistido (log)
+  // Média de avaliações (backend)
+  try {
+    if (window.API && API.hasAPI && item && item.tmdbId) {
+      const box = document.getElementById('avgRatingBox');
+      const typeKey = item.type === 'series' ? 'series' : 'movie';
+      API.summary(typeKey, Number(item.tmdbId)).then(s => {
+        if (!s) return;
+        const avg = Number(s.avg||0);
+        const cnt = Number(s.count||0);
+        const stars = '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
+        if (box) box.textContent = `Média: ${avg.toFixed(1)} (${cnt}) ${stars}`;
+      }).catch(()=>{});
+    }
+  } catch {}
+
+  // Marcar como assistido (log) + data opcional
   (function(){
     try {
       if (!(window.API && API.hasAPI && item && item.tmdbId)) return;
+      const date = document.createElement('input');
+      date.type = 'date';
+      date.className = 'form-control';
+      date.style.maxWidth = '180px';
+      date.style.display = 'inline-block';
+      date.style.marginLeft = '8px';
       const btn = document.createElement('button');
       btn.className = 'btn auth-action'; btn.style.marginLeft='8px';
       btn.textContent = 'Marcar como assistido';
-      document.querySelector('.details__actions')?.appendChild(btn);
+      const act = document.querySelector('.details__actions');
+      act?.appendChild(date);
+      act?.appendChild(btn);
       btn.addEventListener('click', async (e)=>{
         e.preventDefault();
         const mt = item.type === 'series' ? 'SERIES' : 'MOVIE';
-        try { await API.addWatched(mt, Number(item.tmdbId)); btn.textContent='Assistido ✔'; btn.disabled=true; } catch {}
+        let iso;
+        try { const v = date.value; if (v) iso = new Date(v+ 'T00:00:00').toISOString(); } catch {}
+        try { await API.addWatched(mt, Number(item.tmdbId), iso); btn.textContent='Assistido ✔'; btn.disabled=true; } catch {}
       });
     } catch {}
   })();
@@ -194,7 +220,8 @@ document.addEventListener("DOMContentLoaded", () => {
           text.textContent = c.text || '';
           body.appendChild(name); body.appendChild(text);
           row.appendChild(body);
-          if (c.own){
+          const isAdmin = (document.body.getAttribute('data-role')||'').toUpperCase()==='ADMIN';
+          if (c.own || isAdmin){
             const del = document.createElement('button');
             del.className = 'btn'; del.textContent = 'Excluir';
             del.addEventListener('click', async (e)=>{ e.preventDefault(); try { await API.delComment(c.id); await load(); } catch {} });
