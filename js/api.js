@@ -58,6 +58,13 @@
     getComments(type, tmdbId){ return req(`/api/comments/${encodeURIComponent(type)}/${encodeURIComponent(tmdbId)}`); },
     addComment(mediaType, tmdbId, text){ return req('/api/comments', { method:'POST', body: JSON.stringify({ mediaType, tmdbId, text }) }); },
     delComment(id){ return req(`/api/comments/${encodeURIComponent(id)}`, { method:'DELETE' }); },
+
+    // logs
+    myLogs(limit=20){ return req(`/api/logs/me?limit=${encodeURIComponent(String(limit))}`); },
+
+    // TMDB proxy
+    tmdbDetails(type, id){ return req(`/api/tmdb/details/${encodeURIComponent(type)}/${encodeURIComponent(id)}`); },
+    tmdbSearch(type, q, year){ const y = year!=null ? `&year=${encodeURIComponent(String(year))}` : ''; return req(`/api/tmdb/search/${encodeURIComponent(type)}?q=${encodeURIComponent(q)}${y}`); },
   };
 
   global.API = API;

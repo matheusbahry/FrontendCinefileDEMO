@@ -1,4 +1,4 @@
-// Unifica a detecção de login e atualiza a UI do cabeçalho/links protegidos
+﻿// Unifica a detecção de login e atualiza a UI do cabeçalho/links protegidos
 
 // aguarda o DOM carregar
 document.addEventListener("DOMContentLoaded", () => {
@@ -57,7 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("cinefile_username");
     try { localStorage.removeItem("cinefile_jwt"); } catch {}
     // (se quiser preservar listas/ratings, não remova aqui)
-    try { document.body.removeAttribute('data-role'); } catch {}
     updateUI();
 // redireciona navegação
     window.location.href = "index.html";
@@ -137,12 +136,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Inicializa UI
   updateUI();
-  try {
-    const hasJwt = !!localStorage.getItem("cinefile_jwt");
-    if (hasJwt && window.API && API.hasAPI) {
-      API.me().then(info => {
-        if (info && info.role) document.body.setAttribute('data-role', String(info.role).toUpperCase());
-      }).catch(()=>{});
-    }
-  } catch {}
 });
+

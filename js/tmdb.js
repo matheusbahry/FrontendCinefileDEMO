@@ -47,11 +47,17 @@ const TMDB = (() => {
     if (fromLS) { mem.set(k, fromLS); return fromLS; }
 
     return withQueue(async () => {
-      const url = `https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}&language=pt-BR`;
       try {
-        const res = await fetch(url, { cache: "force-cache" });
-        if (!res.ok) return null;
-        const data = await res.json();
+        let data;
+        if (window.API && API.hasAPI) {
+          data = await API.tmdbDetails(type, id);
+          if (typeof data === 'string') data = JSON.parse(data);
+        } else {
+          const url = `https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}&language=pt-BR`;
+          const res = await fetch(url, { cache: "force-cache" });
+          if (!res.ok) return null;
+          data = await res.json();
+        }
         const path = data?.poster_path;
         const full = path ? `${IMG_BASE}${path}` : null;
         if (full) { mem.set(k, full); lsSet(k, full); }
@@ -83,13 +89,18 @@ const TMDB = (() => {
       else params.set("first_air_date_year", String(year));
     }
 
-    const url = `https://api.themoviedb.org/3/search/${apiType}?${params.toString()}`;
-
     return withQueue(async () => {
       try {
-        const res = await fetch(url, { cache: "force-cache" });
-        if (!res.ok) return null;
-        const data = await res.json();
+        let data;
+        if (window.API && API.hasAPI) {
+          data = await API.tmdbSearch(apiType, title, year);
+          if (typeof data === 'string') data = JSON.parse(data);
+        } else {
+          const url = `https://api.themoviedb.org/3/search/${apiType}?${params.toString()}`;
+          const res = await fetch(url, { cache: "force-cache" });
+          if (!res.ok) return null;
+          data = await res.json();
+        }
         const best = data?.results?.[0];
         const path = best?.poster_path;
         const full = path ? `${IMG_BASE}${path}` : null;
@@ -117,4 +128,3 @@ const TMDB = (() => {
 
   return { getPosterById, searchPoster, getPosterSmart, IMG_BASE };
 })();
-

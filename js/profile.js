@@ -244,4 +244,34 @@ document.addEventListener("DOMContentLoaded", () => {
     // Garante visibilidade
     scroller.removeAttribute("hidden");
   })();
+
+  // ===== Logs recentes (quando API configurada) =====
+  (async () => {
+    try {
+      if (!(window.API && API.hasAPI)) return;
+      const logs = await API.myLogs(10);
+      if (!Array.isArray(logs) || !logs.length) return;
+      const sect = document.createElement('section');
+      sect.className = 'row';
+      sect.setAttribute('aria-label', 'Últimas atividades');
+      sect.innerHTML = `
+        <div class="row__head"><h2 class="row__title">Últimas atividades</h2></div>
+        <div id="pfLogs" class="row__scroller" tabindex="0" style="display:grid;gap:8px"></div>
+      `;
+      document.querySelector('main.profile')?.appendChild(sect);
+      const box = sect.querySelector('#pfLogs');
+      logs.forEach(l => {
+        const div = document.createElement('div');
+        div.className = 'muted';
+        const when = new Date(l.ts || l.timestamp || Date.now());
+        let action = String(l.action||'').toLowerCase();
+        if (action.includes('rating')) action = 'Avaliou';
+        else if (action.includes('watchlist_add')) action = 'Adicionou à Watchlist';
+        else if (action.includes('watchlist_remove')) action = 'Removeu da Watchlist';
+        else if (action.includes('comment')) action = 'Comentou';
+        div.textContent = `${when.toLocaleString()} • ${action} • TMDB ${l.tmdbId}`;
+        box.appendChild(div);
+      });
+    } catch {}
+  })();
 });
