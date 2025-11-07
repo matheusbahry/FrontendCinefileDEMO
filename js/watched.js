@@ -225,5 +225,59 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     btnPrev?.addEventListener("click", () => scrollByPage(-1));
     btnNext?.addEventListener("click", () => scrollByPage(1));
+
+    // Optional: refresh from backend ratings when API is configured
+    // Keeps layout intact; replaces content if data is available
+    try {
+      if (window.API && API.hasAPI) {
+        const list = await API.myRatings();
+        const C2 = (window.DATA || window.MOCK_DATA || []).slice();
+        const byTmdb = new Map(C2.map(o => [String(o.tmdbId), o]));
+        const entries2 = (Array.isArray(list)? list: [])
+          .map(r => ({ id: String(r.tmdbId), rating: Number(r.stars||0), ts: Date.parse(r.updatedAt||0)||0 }))
+          .filter(e => e.rating > 0)
+          .sort((a,b)=> (b.ts||0) - (a.ts||0));
+        if (!entries2.length) return;
+
+        const items2 = [];
+        for (const e of entries2) {
+          const local = byTmdb.get(String(e.id));
+          if (local) items2.push({ ...local, rating: e.rating, ts: e.ts });
+        }
+        if (!items2.length) return;
+
+        // Re-render scroller using backend-derived items
+        scroller.innerHTML = "";
+        dots.innerHTML = "";
+        items2.forEach(item => {
+          let link;
+          if (typeof window.createCarouselItem === "function") {
+            link = window.createCarouselItem(item);
+            link.querySelector(".item__overlay")?.remove();
+            link.querySelector(".item__body")?.remove();
+          } else {
+            link = document.createElement("a");
+            link.href = `details.html?id=${encodeURIComponent(String(item.id))}`;
+            link.className = "item__link";
+            link.innerHTML = `
+              <article class="item">
+                <img class="item__img" src="${item.poster || ""}" alt="Poster">
+              </article>
+            `;
+          }
+          const wrap = document.createElement("div");
+          wrap.style.display = "grid";
+          wrap.style.justifyItems = "center";
+          wrap.appendChild(link);
+          const stars = document.createElement("div");
+          stars.className = "watched__stars";
+          stars.textContent = "★".repeat(item.rating) + "☆".repeat(5-item.rating);
+          wrap.appendChild(stars);
+          scroller.appendChild(wrap);
+        });
+        // Update meta count
+        meta.textContent = `${items2.length} ${items2.length === 1 ? "títulos" : "títulos"}`;
+      }
+    } catch {}
   })();
 });
