@@ -5,7 +5,7 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn -q -DskipTests dependency:go-offline
 COPY src ./src
-RUN mvn -q -DskipTests=true clean package
+RUN mvn -q -DskipTests=true clean package spring-boot:repackage
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
@@ -14,4 +14,3 @@ ENV PORT=8080
 COPY --from=build /app/target/cinefile-backend-0.1.0.jar /app/app.jar
 EXPOSE 8080
 CMD ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
-
