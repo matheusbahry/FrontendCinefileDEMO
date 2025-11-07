@@ -22,9 +22,10 @@ import java.util.Map;
 public class RatingController {
     private final RatingRepository ratingRepo;
     private final SeasonRatingRepository seasonRepo;
+    private final com.cinefile.repo.LogRepository logs;
 
-    public RatingController(RatingRepository ratingRepo, SeasonRatingRepository seasonRepo) {
-        this.ratingRepo = ratingRepo; this.seasonRepo = seasonRepo;
+    public RatingController(RatingRepository ratingRepo, SeasonRatingRepository seasonRepo, com.cinefile.repo.LogRepository logs) {
+        this.ratingRepo = ratingRepo; this.seasonRepo = seasonRepo; this.logs = logs;
     }
 
     @PostMapping
@@ -35,6 +36,10 @@ public class RatingController {
         r.setStars(Math.max(1, Math.min(5, req.getStars())));
         r.setUpdatedAt(Instant.now());
         ratingRepo.save(r);
+        var le = new com.cinefile.model.LogEntry();
+        le.setUser(user); le.setAction(com.cinefile.model.ActionType.RATING_SET); le.setMediaType(req.getMediaType()); le.setTmdbId(req.getTmdbId());
+        le.setTs(Instant.now()); le.setDetails("stars=" + r.getStars());
+        logs.save(le);
         return ResponseEntity.ok(Map.of("id", r.getId(), "stars", r.getStars(), "tmdbId", r.getTmdbId(), "mediaType", r.getMediaType()));
     }
 
@@ -63,7 +68,10 @@ public class RatingController {
         r.setStars(Math.max(1, Math.min(5, req.getStars())));
         r.setUpdatedAt(Instant.now());
         seasonRepo.save(r);
+        var le = new com.cinefile.model.LogEntry();
+        le.setUser(user); le.setAction(com.cinefile.model.ActionType.RATING_SET); le.setMediaType(com.cinefile.model.MediaType.SERIES); le.setTmdbId(req.getTmdbId());
+        le.setTs(Instant.now()); le.setDetails("season="+req.getSeasonNumber()+",stars="+r.getStars());
+        logs.save(le);
         return ResponseEntity.ok(Map.of("id", r.getId(), "stars", r.getStars()));
     }
 }
-

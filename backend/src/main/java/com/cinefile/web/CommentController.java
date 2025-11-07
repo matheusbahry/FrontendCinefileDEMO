@@ -26,9 +26,18 @@ public class CommentController {
     }
 
     @GetMapping("/comments/{type}/{tmdbId}")
-    public List<Comment> list(@PathVariable("type") String type, @PathVariable Long tmdbId) {
+    public List<Map<String,Object>> list(@AuthenticationPrincipal User me, @PathVariable("type") String type, @PathVariable Long tmdbId) {
         MediaType mt = "series".equalsIgnoreCase(type) ? MediaType.SERIES : MediaType.MOVIE;
-        return comments.findAllByMediaTypeAndTmdbIdOrderByCreatedAtDesc(mt, tmdbId);
+        return comments.findAllByMediaTypeAndTmdbIdOrderByCreatedAtDesc(mt, tmdbId)
+                .stream()
+                .map(c -> Map.of(
+                        "id", c.getId(),
+                        "text", c.getText(),
+                        "createdAt", c.getCreatedAt(),
+                        "username", c.getUser().getUsername(),
+                        "own", me != null && c.getUser().getId().equals(me.getId())
+                ))
+                .toList();
     }
 
     @PostMapping("/comments")
@@ -67,4 +76,3 @@ public class CommentController {
         return logs.findAllByUserOrderByTsDesc(user, PageRequest.of(0, l));
     }
 }
-

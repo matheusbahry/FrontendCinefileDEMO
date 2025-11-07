@@ -79,6 +79,71 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
   `;
 
+  // Comentários (somente quando API está configurada; não altera layout base)
+  try {
+    if (window.API && API.hasAPI) {
+      const sect = document.createElement('section');
+      sect.style.marginTop = '12px';
+      sect.innerHTML = `
+        <h2 style="margin:0 0 6px 0;font-size:18px">Comentários</h2>
+        <div id="commentsList" style="display:grid;gap:8px"></div>
+        <form id="commentForm" class="auth-action" style="display:grid;gap:8px;margin-top:8px">
+          <textarea id="commentText" rows="3" maxlength="1000" placeholder="Escreva um comentário..." required style="resize:vertical;padding:8px"></textarea>
+          <div style="display:flex;justify-content:flex-end"><button type="submit" class="btn">Enviar</button></div>
+        </form>
+        <div id="commentsState" class="muted" style="padding-top:6px"></div>
+      `;
+      card.appendChild(sect);
+
+      const listEl = sect.querySelector('#commentsList');
+      const formEl = sect.querySelector('#commentForm');
+      const textEl = sect.querySelector('#commentText');
+      const stateEl= sect.querySelector('#commentsState');
+      const apiType = item.type === 'series' ? 'series' : 'movie';
+
+      function renderComments(arr){
+        listEl.innerHTML = '';
+        if (!arr || !arr.length){ stateEl.textContent = 'Sem comentários.'; return; }
+        stateEl.textContent = '';
+        arr.forEach(c => {
+          const row = document.createElement('div');
+          row.style.display = 'grid';
+          row.style.gridTemplateColumns = '1fr auto';
+          row.style.gap = '8px';
+          const body = document.createElement('div');
+          const name = document.createElement('div');
+          name.style.fontWeight = '600';
+          name.textContent = c.username ? '@' + c.username : 'usuário';
+          const text = document.createElement('div');
+          text.textContent = c.text || '';
+          body.appendChild(name); body.appendChild(text);
+          row.appendChild(body);
+          if (c.own){
+            const del = document.createElement('button');
+            del.className = 'btn'; del.textContent = 'Excluir';
+            del.addEventListener('click', async (e)=>{ e.preventDefault(); try { await API.delComment(c.id); await load(); } catch {} });
+            row.appendChild(del);
+          }
+          listEl.appendChild(row);
+        });
+      }
+
+      async function load(){
+        try { const arr = await API.getComments(apiType, Number(item.tmdbId)); renderComments(arr); }
+        catch { stateEl.textContent = 'Falha ao carregar comentários.'; }
+      }
+
+      formEl.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const txt = (textEl.value || '').trim(); if (!txt) return;
+        try { const mt = item.type === 'series' ? 'SERIES' : 'MOVIE'; await API.addComment(mt, Number(item.tmdbId), txt); textEl.value=''; await load(); }
+        catch { stateEl.textContent = 'Não foi possível enviar seu comentário.'; }
+      });
+
+      load();
+    }
+  } catch {}
+
   // ===== RATING UI (sem recriar DOM no hover) =====
   const ratingEl = document.getElementById("ratingStars");
   ratingEl.style.fontSize = "28px";

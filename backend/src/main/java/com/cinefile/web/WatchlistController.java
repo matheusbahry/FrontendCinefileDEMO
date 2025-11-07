@@ -17,7 +17,8 @@ import java.util.Map;
 @RequestMapping("/api/watchlist")
 public class WatchlistController {
     private final WatchlistRepository repo;
-    public WatchlistController(WatchlistRepository repo) { this.repo = repo; }
+    private final com.cinefile.repo.LogRepository logs;
+    public WatchlistController(WatchlistRepository repo, com.cinefile.repo.LogRepository logs) { this.repo = repo; this.logs = logs; }
 
     @GetMapping
     public List<WatchlistItem> list(@AuthenticationPrincipal User user) {
@@ -31,21 +32,37 @@ public class WatchlistController {
         var it = new WatchlistItem();
         it.setUser(user); it.setMediaType(req.getMediaType()); it.setTmdbId(req.getTmdbId());
         repo.save(it);
+        var le = new com.cinefile.model.LogEntry();
+        le.setUser(user); le.setAction(com.cinefile.model.ActionType.WATCHLIST_ADD); le.setMediaType(req.getMediaType()); le.setTmdbId(req.getTmdbId());
+        logs.save(le);
         return ResponseEntity.ok(it);
     }
 
     @DeleteMapping
     public ResponseEntity<?> remove(@AuthenticationPrincipal User user, @Valid @RequestBody WatchlistRequest req) {
         var existing = repo.findByUserAndMediaTypeAndTmdbId(user, req.getMediaType(), req.getTmdbId());
-        existing.ifPresent(repo::delete);
+        existing.ifPresent(x -> { repo.delete(x); });
+        if (existing.isPresent()) {
+            var le = new com.cinefile.model.LogEntry();
+            le.setUser(user); le.setAction(com.cinefile.model.ActionType.WATCHLIST_REMOVE); le.setMediaType(req.getMediaType()); le.setTmdbId(req.getTmdbId());
+            logs.save(le);
+        }
         return ResponseEntity.ok(Map.of("removed", existing.isPresent()));
     }
 
     @PostMapping("/toggle")
     public Map<String,Object> toggle(@AuthenticationPrincipal User user, @Valid @RequestBody WatchlistRequest req) {
         var existing = repo.findByUserAndMediaTypeAndTmdbId(user, req.getMediaType(), req.getTmdbId());
-        if (existing.isPresent()) { repo.delete(existing.get()); return Map.of("value", false); }
+        if (existing.isPresent()) { repo.delete(existing.get());
+            var le = new com.cinefile.model.LogEntry();
+            le.setUser(user); le.setAction(com.cinefile.model.ActionType.WATCHLIST_REMOVE); le.setMediaType(req.getMediaType()); le.setTmdbId(req.getTmdbId());
+            logs.save(le);
+            return Map.of("value", false);
+        }
         var it = new WatchlistItem(); it.setUser(user); it.setMediaType(req.getMediaType()); it.setTmdbId(req.getTmdbId()); repo.save(it);
+        var le = new com.cinefile.model.LogEntry();
+        le.setUser(user); le.setAction(com.cinefile.model.ActionType.WATCHLIST_ADD); le.setMediaType(req.getMediaType()); le.setTmdbId(req.getTmdbId());
+        logs.save(le);
         return Map.of("value", true);
     }
 
@@ -56,4 +73,3 @@ public class WatchlistController {
         return Map.of("value", exists);
     }
 }
-

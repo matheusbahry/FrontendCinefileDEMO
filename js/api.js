@@ -52,9 +52,13 @@
     wlAdd(mediaType, tmdbId){ return req('/api/watchlist', { method:'POST', body: JSON.stringify({ mediaType, tmdbId }) }); },
     wlRemove(mediaType, tmdbId){ return req('/api/watchlist', { method:'DELETE', body: JSON.stringify({ mediaType, tmdbId }) }); },
     wlToggle(mediaType, tmdbId){ return req('/api/watchlist/toggle', { method:'POST', body: JSON.stringify({ mediaType, tmdbId }) }); },
-    wlHas(type, tmdbId){ return req(`/api/watchlist/has/${encodeURIComponent(type)}/${encodeURIComponent(tmdbId)}`); }
+    wlHas(type, tmdbId){ return req(`/api/watchlist/has/${encodeURIComponent(type)}/${encodeURIComponent(tmdbId)}`); },
+
+    // comments
+    getComments(type, tmdbId){ return req(`/api/comments/${encodeURIComponent(type)}/${encodeURIComponent(tmdbId)}`); },
+    addComment(mediaType, tmdbId, text){ return req('/api/comments', { method:'POST', body: JSON.stringify({ mediaType, tmdbId, text }) }); },
+    delComment(id){ return req(`/api/comments/${encodeURIComponent(id)}`, { method:'DELETE' }); },
   };
 
   global.API = API;
 })(window);
-
