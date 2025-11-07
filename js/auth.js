@@ -20,7 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // declara variável hasUser
       const hasUser  = !!localStorage.getItem("cinefile_username");
 // retorna
-      return flagNew || flagOld || hasUser;
+      const hasJwt   = !!localStorage.getItem("cinefile_jwt");
+      return flagNew || flagOld || hasUser || hasJwt;
 // captura erro
     } catch {
 // retorna
@@ -54,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("cinefile_logged_in");
 // acessa localStorage
     localStorage.removeItem("cinefile_username");
+    try { localStorage.removeItem("cinefile_jwt"); } catch {}
     // (se quiser preservar listas/ratings, não remova aqui)
     updateUI();
 // redireciona navegação

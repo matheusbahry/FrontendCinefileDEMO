@@ -24,20 +24,19 @@
 
       <!-- Menu e busca Lado direito (desktop)-->
       <div class="nav__right">
-       <nav class="nav__menu" aria-label="Principal">
-  <a href="index.html" class="nav__link">Catálogo</a>
-  <a href="watchlist.html" class="nav__link requires-auth">Watchlist</a>
-  <a href="watched.html" class="nav__link">Assistidos</a>
-  <a href="profile.html" class="nav__link requires-auth">Perfil</a>
+        <nav class="nav__menu" aria-label="Principal">
+          <a href="index.html" class="nav__link">Catálogo</a>
+          <a href="watchlist.html" class="nav__link requires-auth">Watchlist</a>
+          <a href="watched.html" class="nav__link">Assistidos</a>
+          <a href="profile.html" class="nav__link requires-auth">Perfil</a>
 
-  <!-- aparecem quando NÃO logado -->
-  <a href="login.html"    class="nav__link link-login">Entrar</a>
-  <a href="register.html" class="nav__link link-register">Cadastrar</a>
+          <!-- aparecem quando NÃO logado -->
+          <a href="login.html"    class="nav__link link-login">Entrar</a>
+          <a href="register.html" class="nav__link link-register">Cadastrar</a>
 
-  <!-- aparece quando logado -->
-  <a href="#" class="nav__link link-logout">Sair</a>
-</nav>
-
+          <!-- aparece quando logado -->
+          <a href="#" class="nav__link link-logout">Sair</a>
+        </nav>
 
         <form class="nav__search" id="searchForm" role="search" aria-label="Buscar títulos">
           <input type="search" id="searchInput" class="nav__searchInput"
@@ -50,20 +49,19 @@
     <!-- Drawer mobile -->
     <div class="nav__drawer" id="navDrawer" hidden>
       <nav class="nav__menu" id="primaryMenu" aria-label="Principal">
-  <a href="index.html"     class="nav__link">Catálogo</a>
-  <a href="watchlist.html" class="nav__link requires-auth">Watchlist</a>
-  <a href="watched.html"   class="nav__link">Assistidos</a>
-  <a href="profile.html"   class="nav__link requires-auth">Perfil</a>
+        <a href="index.html"     class="nav__link">Catálogo</a>
+        <a href="watchlist.html" class="nav__link requires-auth">Watchlist</a>
+        <a href="watched.html"   class="nav__link">Assistidos</a>
+        <a href="profile.html"   class="nav__link requires-auth">Perfil</a>
 
-  <a href="login.html"     class="nav__link link-login">Entrar</a>
-  <a href="register.html"  class="nav__link link-register">Cadastrar</a>
-  <a href="#"              class="nav__link link-logout">Sair</a>
-</nav>
-
+        <a href="login.html"     class="nav__link link-login">Entrar</a>
+        <a href="register.html"  class="nav__link link-register">Cadastrar</a>
+        <a href="#"              class="nav__link link-logout">Sair</a>
+      </nav>
     </div>
   </header>
 
-  <!--CONTEÚDO -->
+  <!-- CONTEÚDO -->
   <main class="details">
     <article id="detailsCard" class="details__card">
       <!-- preenchido via JS -->
@@ -75,18 +73,23 @@
     <p>© 2025 Cinefile — PFC Sistemas de Informação</p>
   </footer>
 
-<script src="js/data.js"></script>
-<script src="js/tmdb.js"></script>
-<script src="js/components.js"></script>
+<!-- SCRIPTS (ordem importa) -->
+<script src="js/config.js?v=1"></script>
+<script src="js/api.js?v=1"></script>
+<script src="js/data.js?v=5"></script>
+<script src="js/tmdb.js?v=5"></script>
+<script src="js/components.js?v=5"></script>
 
+<!-- precisa para Watchlist -->
+<script src="js/lists.js?v=5"></script>
 
-<script src="js/ratings.js"></script>
-<script src="js/details.js"></script>
+<!-- precisa para Avaliações -->
+<script src="js/ratings.js?v=5"></script>
 
-<script src="js/nav.js"></script>
-<script src="js/auth.js"></script>
+<!-- página de Detalhes consome tudo acima -->
+<script src="js/details.js?v=5"></script>
 
-
+<script src="js/nav.js?v=5"></script>
+<script src="js/auth.js?v=5"></script>
 </body>
 </html>
-

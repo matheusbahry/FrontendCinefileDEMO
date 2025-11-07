@@ -1,146 +1,247 @@
-// aguarda o DOM carregar
+// js/profile.js
+// Perfil do usuário: exige login, mostra header e últimos avaliados (até 4).
+// Cruza com catálogo local e, se faltar, busca no TMDB para reconstruir o card.
+
 document.addEventListener("DOMContentLoaded", () => {
-  
-  // 1) Exigir login
-// declara variável isLogged
+  // ===== 1) Exigir login =====
   const isLogged =
-    (window.AUTH && AUTH.isLogged && AUTH.isLogged()) ||
-// acessa localStorage
+    (window.AUTH && typeof AUTH.isLogged === "function" && AUTH.isLogged()) ||
     localStorage.getItem("cinefile_logged_in") === "true" ||
-// acessa localStorage
     localStorage.getItem("cinefile_logged") === "true";
 
-// condição
   if (!isLogged) {
-// redireciona navegação
     window.location.href = "login.html";
-// retorna
     return;
   }
 
-  // 2) Header do perfil
-// declara variável rawUser
-  const rawUser = localStorage.getItem("cinefile_username") || "usuario";
-// declara variável username
+  // ===== 2) Header do perfil =====
+  const rawUser  = localStorage.getItem("cinefile_username") || "usuario";
   const username = rawUser.startsWith("@") ? rawUser : `@${rawUser}`;
-// declara variável nameEl
   const nameEl   = document.getElementById("profileName");
-// condição
   if (nameEl) nameEl.textContent = username;
 
-// declara variável avatarEl
   const avatarEl = document.getElementById("profileAvatar");
-// condição
   if (avatarEl) {
-// declara variável saved
     const saved = localStorage.getItem("cinefile_avatar");
-// atribui valor
     avatarEl.src = saved || "assets/avatar.png";
-// atribui valor
     avatarEl.onerror = () => { avatarEl.src = "assets/picfoto.png"; };
   }
 
-  // 3) Últimos avaliados
-// declara variável DATASET
-  const DATASET  = window.DATA || window.MOCK_DATA || [];
-// declara variável scroller
+  // ===== 3) Últimos avaliados =====
+  const CATALOG  = (window.DATA || window.MOCK_DATA || []).slice();
+  const indexById = new Map(CATALOG.map(obj => [String(obj.id), obj]));
+  const indexByTmdb = new Map(CATALOG.map(obj => [String(obj.tmdbId), obj]));
+
   const scroller = document.getElementById("pfScroller");
-// declara variável metaEl
   const metaEl   = document.getElementById("pfLastMeta");
-// condição
   if (!scroller) return;
 
-  // Lê avaliações salvas por ratings.js
-// declara variável RATINGS
+  // Lê avaliações salvas
   let RATINGS = {};
-// acessa localStorage
   try { RATINGS = JSON.parse(localStorage.getItem("cinefile_ratings") || "{}"); }
-// captura erro
   catch { RATINGS = {}; }
 
-  // Ordena por mais recente
-// declara variável ordered
+  // Ordena por mais recente, filtra > 0 e pega até 4
   const ordered = Object.entries(RATINGS)
-// itera coleção
     .map(([id, r]) => ({
-      id,
-      rating: Number((r && r.rating) || 0),
-      ts: Number((r && r.ts) || 0)
+      id: String(id),
+      rating: Number(r?.rating || 0),
+      ts: Number(r?.ts || 0)
     }))
-// itera coleção
     .filter(x => x.rating > 0)
-// atribui valor
-    .sort((a, b) => b.ts - a.ts);
+    .sort((a, b) => b.ts - a.ts)
+    .slice(0, 4);
 
-  // Pega até 4
-// declara variável last4
-  const last4 = ordered.slice(0, 4).map(e => {
-// declara variável item
-    const item = DATASET.find(x => String(x.id) === String(e.id));
-// retorna
-    return item ? { ...item, rating: e.rating } : null;
-// itera coleção
-  }).filter(Boolean);
-
-  // Função para estrelas
-// declara variável starString
-  const starString = (n) => {
-// declara variável s
-    const s = Math.max(0, Math.min(5, Number(n || 0)));
-// retorna
-    return "★".repeat(s) + "☆".repeat(5 - s);
-  };
-
-  // Limpa trilho
-// define HTML interno
-  scroller.innerHTML = "";
-
-// condição
-  if (!last4.length) {
-    // Sem itens: mostra meta e não cria placeholders
-// condição
+  // Se nada avaliado
+  if (!ordered.length) {
+    scroller.innerHTML = "";
     if (metaEl) metaEl.textContent = "Nenhum título avaliado ainda";
-// retorna
     return;
   }
 
-// condição
-  if (metaEl) metaEl.textContent = `${last4.length} ${last4.length === 1 ? "título" : "títulos"}`;
+  // Helper de estrelas
+  const starString = (n) => {
+    const s = Math.max(0, Math.min(5, Number(n || 0)));
+    return "★".repeat(s) + "☆".repeat(5 - s);
+  };
 
-  // Render idêntico ao de “Assistidos” (pôster puro + estrelas embaixo)
-// itera coleção
-  last4.forEach(item => {
-    // Card padrão reutilizando o mesmo gerador
-// declara variável link
-    const link = createCarouselItem(item);
+  // Imagem TMDB
+  const tmdbImage = (path) => path ? `https://image.tmdb.org/t/p/w342${path}` : "";
 
-    // Remove overlay e corpo para deixar só pôster
-// seleciona elemento do DOM
-    link.querySelector(".item__overlay")?.remove();
-// seleciona elemento do DOM
-    link.querySelector(".item__body")?.remove();
+  // Mapeia detalhes TMDB para o nosso modelo
+  function mapTMDBDetails(d, id) {
+    if (!d) return null;
+    const isTv = !!d.first_air_date || d.media_type === "tv" || d.type === "series";
+    return {
+      id: String(id),
+      title: d.title || d.name || "(sem título)",
+      year: (d.release_date || d.first_air_date || "").slice(0, 4) || "",
+      poster: tmdbImage(d.poster_path),
+      type: isTv ? "series" : "movie"
+    };
+  }
 
-    // Envoltório para alinhar estrelas abaixo
-// declara variável wrap
-    const wrap = document.createElement("div");
-// atribui valor
-    wrap.style.display = "grid";
-// atribui valor
-    wrap.style.justifyItems = "center";
+  // Busca por ID no TMDB usando tmdb.js se existir, senão fetch direto
+  async function fetchFromTMDBById(id) {
+    // 1) tmdb.js
+    try {
+      if (window.TMDB) {
+        if (typeof TMDB.getDetails === "function") {
+          const d = await TMDB.getDetails(id);
+          return mapTMDBDetails(d, id);
+        }
+        if (typeof TMDB.details === "function") {
+          const d = await TMDB.details(id);
+          return mapTMDBDetails(d, id);
+        }
+      }
+    } catch {}
 
-// adiciona nó ao DOM
-    wrap.appendChild(link);
+    // 2) fetch direto
+    try {
+      const apiKey = window.TMDB?.API_KEY || window.TMDB_KEY || undefined;
+      const lang   = "pt-BR";
+      if (!apiKey) return null;
 
-// declara variável stars
-    const stars = document.createElement("div");
-// atribui valor
-    stars.className = "watched__stars"; // usa o mesmo estilo dos Assistidos
-// atribui valor
-    stars.textContent = starString(item.rating || 0);
-// adiciona nó ao DOM
-    wrap.appendChild(stars);
+      // movie
+      let res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=${lang}`);
+      if (res.ok) {
+        const d = await res.json();
+        return {
+          id: String(id),
+          title: d.title || d.name || "(sem título)",
+          year: (d.release_date || "").slice(0, 4) || "",
+          poster: tmdbImage(d.poster_path),
+          type: "movie"
+        };
+      }
+      // tv
+      res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${apiKey}&language=${lang}`);
+      if (res.ok) {
+        const d = await res.json();
+        return {
+          id: String(id),
+          title: d.name || d.title || "(sem título)",
+          year: (d.first_air_date || "").slice(0, 4) || "",
+          poster: tmdbImage(d.poster_path),
+          type: "series"
+        };
+      }
+    } catch {}
+    return null;
+  }
 
-// adiciona nó ao DOM
-    scroller.appendChild(wrap);
-  });
+  (async () => {
+    // Tenta backend primeiro
+    try {
+      if (window.API && API.hasAPI) {
+        const list = await API.myRatings();
+        const sorted = (Array.isArray(list) ? list : [])
+          .slice()
+          .sort((a,b)=> new Date(b.updatedAt||b.updateAt||0) - new Date(a.updatedAt||a.updateAt||0))
+          .slice(0,4);
+        const items = [];
+        for (const r of sorted) {
+          const tmdbId = String(r.tmdbId);
+          const local = indexByTmdb.get(tmdbId);
+          if (local) {
+            items.push({ ...local, rating: Number(r.stars||r.rating||0) });
+          } else {
+            const fetched = await fetchFromTMDBById(tmdbId);
+            if (fetched) items.push({ ...fetched, rating: Number(r.stars||r.rating||0) });
+          }
+        }
+        scroller.innerHTML = "";
+        if (!items.length) {
+          if (metaEl) metaEl.textContent = "Nenhum tfdtulo avaliado ainda";
+          return;
+        }
+        if (metaEl) metaEl.textContent = `${items.length} ${items.length === 1 ? "tfdtulo" : "tfdtulos"}`;
+        items.forEach(item => {
+          let link;
+          if (typeof window.createCarouselItem === "function") {
+            link = window.createCarouselItem(item);
+            link.querySelector(".item__overlay")?.remove();
+            link.querySelector(".item__body")?.remove();
+          } else {
+            link = document.createElement("a");
+            link.href = `details.html?id=${encodeURIComponent(String(item.id))}`;
+            link.className = "item__link";
+            link.innerHTML = `
+              <article class="item">
+                <img class="item__img" src="${item.poster || ""}" alt="Poster de ${item.title}">
+              </article>
+            `;
+          }
+          const wrap = document.createElement("div");
+          wrap.style.display = "grid";
+          wrap.style.justifyItems = "center";
+          wrap.appendChild(link);
+          const stars = document.createElement("div");
+          stars.className = "watched__stars";
+          stars.textContent = starString(item.rating || 0);
+          wrap.appendChild(stars);
+          scroller.appendChild(wrap);
+        });
+        scroller.removeAttribute("hidden");
+        return; // evita fallback local
+      }
+    } catch {}
+    // Encontra no catálogo local ou busca no TMDB se faltar
+    const items = [];
+    for (const e of ordered) {
+      const local = indexById.get(String(e.id));
+      if (local) {
+        items.push({ ...local, rating: e.rating, ts: e.ts });
+      } else {
+        const fetched = await fetchFromTMDBById(e.id);
+        if (fetched) items.push({ ...fetched, rating: e.rating, ts: e.ts });
+      }
+    }
+
+    scroller.innerHTML = "";
+
+    if (!items.length) {
+      if (metaEl) metaEl.textContent = "Nenhum título avaliado ainda";
+      return;
+    }
+
+    if (metaEl) metaEl.textContent = `${items.length} ${items.length === 1 ? "título" : "títulos"}`;
+
+    // Render idêntico ao de “Assistidos”
+    items.forEach(item => {
+      let link;
+
+      if (typeof window.createCarouselItem === "function") {
+        link = window.createCarouselItem(item);
+        link.querySelector(".item__overlay")?.remove();
+        link.querySelector(".item__body")?.remove();
+      } else {
+        // Fallback simples
+        link = document.createElement("a");
+        link.href = `details.html?id=${encodeURIComponent(String(item.id))}`;
+        link.className = "item__link";
+        link.innerHTML = `
+          <article class="item">
+            <img class="item__img" src="${item.poster || ""}" alt="Pôster de ${item.title}">
+          </article>
+        `;
+      }
+
+      const wrap = document.createElement("div");
+      wrap.style.display = "grid";
+      wrap.style.justifyItems = "center";
+      wrap.appendChild(link);
+
+      const stars = document.createElement("div");
+      stars.className = "watched__stars";
+      stars.textContent = starString(item.rating || 0);
+      wrap.appendChild(stars);
+
+      scroller.appendChild(wrap);
+    });
+
+    // Garante visibilidade
+    scroller.removeAttribute("hidden");
+  })();
 });

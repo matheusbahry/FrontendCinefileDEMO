@@ -6,7 +6,7 @@
   <title>Cinefile — Perfil</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css"/>
 </head>
 <body>
   <!-- Cabeçalho -->
@@ -75,11 +75,12 @@
 
       <!-- Wrapper para alternar entre vazio e trilho -->
       <div id="pfLatestWrapper">
-        <!-- trilho (mesmo estilo de 'Assistidos'); começa escondido -->
-        <div class="row__scroller row__scroller--watched" id="pfScroller" tabindex="0" hidden></div>
+        <!-- trilho (mesmo estilo de 'Assistidos') -->
+        <div class="row__scroller row__scroller--watched" id="pfScroller" tabindex="0"></div>
 
-      <!-- bolinhas de paginação (se quiser usar depois) -->
-      <div class="row__dots" id="pfDots" aria-label="Paginação do carrossel" hidden></div>
+        <!-- bolinhas de paginação (opcional futuro) -->
+        <div class="row__dots" id="pfDots" aria-label="Paginação do carrossel" hidden></div>
+      </div>
     </section>
   </main>
 
@@ -88,13 +89,15 @@
   </footer>
 
   <!-- Scripts (ordem importa) -->
-  <script src="js/data.js"></script>
-  <script src="js/tmdb.js"></script>
-  <script src="js/components.js"></script>
-  <script src="js/profile.js"></script>
-  <script src="js/nav.js"></script>
-  <script src="js/auth.js"></script>
+  <script src="js/config.js?v=1"></script>
+  <script src="js/api.js?v=1"></script>
+  <script src="js/data.js?v=4"></script>
+  <script src="js/tmdb.js?v=4"></script>
+  <script src="js/components.js?v=4"></script>
+  <!-- opcional: caso venha a usar Ratings no perfil -->
+  <script src="js/ratings.js?v=4"></script>
+  <script src="js/profile.js?v=4"></script>
+  <script src="js/nav.js?v=4"></script>
+  <script src="js/auth.js?v=4"></script>
 </body>
 </html>
-
-

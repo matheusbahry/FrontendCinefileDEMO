@@ -97,6 +97,36 @@ document.addEventListener("DOMContentLoaded", () => {
   // LISTS.all() retorna um array na ordem em que o usuário foi adicionando.
   // Queremos o MAIS NOVO primeiro => invertido.
 // declara variável idList
+  if (window.API && API.hasAPI) {
+    (async () => {
+      try {
+        const list = await API.watchlist();
+        const mapByTmdb = new Map((window.MOCK_DATA || []).map(x => [String(x.tmdbId), x]));
+        const items = list.map(w => {
+          const local = mapByTmdb.get(String(w.tmdbId));
+          if (local) return local;
+          return {
+            id: String(w.tmdbId),
+            tmdbId: Number(w.tmdbId),
+            type: (String(w.mediaType||'').toUpperCase()==='SERIES') ? 'series' : 'movie',
+            title: '(desconhecido)',
+            year: '',
+            poster: '',
+            rating: 0
+          };
+        });
+        const movies = items.filter(x => x.type === 'movie');
+        const series = items.filter(x => x.type === 'series');
+        showState(items.length ? '' : `
+          Sua Watchlist est vazia.<br/>
+          Dica: abra um ttulo e clique em <strong>+ Watchlist</strong>.
+        `, !items.length);
+        renderGrid(boxMovies, movies);
+        renderGrid(boxSeries, series);
+        activate('movies');
+      } catch {}
+    })();
+  } else {
   const idList = LISTS.all().slice().reverse(); // ex.: ["idC","idB","idA"]
 
   // Cruza com o catálogo preservando a ordem escolhida
@@ -120,6 +150,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Inicia em FILMES
   activate("movies");
+  }
 });
-
-

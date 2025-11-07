@@ -20,23 +20,65 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // adiciona ouvinte de evento
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();                   // evita recarregar a página
 
     // declara variável user
-    const user = inputUser.value.trim();  // lê username
+    const userRaw = inputUser.value.trim();
     // declara variável pass
-    const pass = inputPass.value.trim();  // lê senha
+    const pass    = inputPass.value.trim();
+
+    // normaliza o usuário para comparação (case-insensitive)
+    const user = userRaw.toLowerCase();
+
+    // Try backend login when configured
+    try {
+      if (window.API && API.hasAPI) {
+        const r = await API.login(userRaw, pass);
+        try {
+          localStorage.setItem("cinefile_logged", "true");
+          localStorage.setItem("cinefile_logged_in", "true");
+          localStorage.setItem("cinefile_username", r.username || userRaw);
+        } catch {}
+
+        // apply pending rating if any
+        try {
+          const raw = localStorage.getItem("cinefile_pending_rating");
+          if (raw) {
+            const pending = JSON.parse(raw);
+            if (pending && pending.id && pending.rating != null) {
+              if (window.Ratings && typeof Ratings.set === "function") {
+                Ratings.set(String(pending.id), Number(pending.rating));
+              }
+            }
+            localStorage.removeItem("cinefile_pending_rating");
+          }
+        } catch {}
+
+        const params = new URLSearchParams(location.search);
+        const redirect = params.get("redirect");
+        if (redirect) {
+          try {
+            const url = new URL(decodeURIComponent(redirect), location.origin);
+            if (url.origin === location.origin) { location.href = url.pathname + url.search + url.hash; return; }
+          } catch(_) {}
+        }
+        location.href = "index.html";
+        return;
+      }
+    } catch (_) { /* fallback to mock below */ }
 
     // condição
     if (user === "brucewayne" && pass === "gotham") {
       // ---- sessão/gravação de login (flags novas e antigas) ----
-      // acessa localStorage
-      localStorage.setItem("cinefile_logged", "true");      // flag nova (principal)
-      // acessa localStorage
-      localStorage.setItem("cinefile_logged_in", "true");   // compat antigo
-      // acessa localStorage
-      localStorage.setItem("cinefile_username", user);      // guarda username
+      try {
+        // acessa localStorage
+        localStorage.setItem("cinefile_logged", "true");      // flag nova (principal)
+        // acessa localStorage
+        localStorage.setItem("cinefile_logged_in", "true");   // compat antigo
+        // acessa localStorage
+        localStorage.setItem("cinefile_username", userRaw);   // guarda username com o que o usuário digitou
+      } catch {}
 
       // ---- aplica avaliação pendente (se o usuário clicou numa estrela deslogado) ----
       // tenta executar bloco
@@ -49,9 +91,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const pending = JSON.parse(raw);                           // parse JSON
           // condição
           if (pending && pending.id && pending.rating != null) {
-            // condição
+            // Se ratings.js está carregado, usa API oficial
             if (window.Ratings && typeof Ratings.set === "function") {
-              Ratings.set(String(pending.id), Number(pending.rating)); // usa API Ratings
+              Ratings.set(String(pending.id), Number(pending.rating));
             } else {
               // fallback simples (se ratings.js não estiver carregado)
               // declara variável KEY
@@ -61,12 +103,12 @@ document.addEventListener("DOMContentLoaded", () => {
               // tenta executar bloco
               try { map = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
               // atribui valor
-              map[String(pending.id)] = {                               // grava nota
+              map[String(pending.id)] = {
                 rating: Math.max(1, Math.min(5, Number(pending.rating))),
                 ts: Date.now()
               };
               // acessa localStorage
-              localStorage.setItem(KEY, JSON.stringify(map));          // persiste
+              try { localStorage.setItem(KEY, JSON.stringify(map)); } catch {}
             }
           }
           // acessa localStorage
@@ -79,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const params   = new URLSearchParams(location.search);           // lê querystring
       // declara variável redirect
       const redirect = params.get("redirect");                         // pega ?redirect=...
+
       // condição
       if (redirect) {
         // Evita abrir em novo host por segurança simples (mantém só path/query locais)
@@ -107,4 +150,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-

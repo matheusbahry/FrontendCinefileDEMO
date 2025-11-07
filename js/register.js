@@ -20,7 +20,7 @@
   }
 
 // adiciona ouvinte de evento
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     hide(err); hide(ok);
 
@@ -42,6 +42,25 @@
     if (pass1.length < 4)     return show(err, "Senha deve ter pelo menos 4 caracteres.");
 // condição
     if (pass1 !== pass2)      return show(err, "As senhas não coincidem.");
+
+    // If backend is configured, register via API
+    try {
+      if (window.API && API.hasAPI) {
+        await API.register(username, pass1, email);
+        try {
+          localStorage.setItem("cinefile_logged_in", "true");
+          localStorage.setItem("cinefile_logged", "true");
+          localStorage.setItem("cinefile_username", username);
+        } catch {}
+        show(ok, "Conta criada! Redirecionando…");
+        const params = new URLSearchParams(location.search);
+        const to = params.get("redirect") || "index.html";
+        setTimeout(() => location.href = to, 600);
+        return;
+      }
+    } catch(ex) {
+      return show(err, (ex && ex.message) || "Falha ao cadastrar");
+    }
 
     // carrega "banco" local
 // declara variável users
