@@ -66,6 +66,12 @@
     tmdbDetails(type, id){ return req(`/api/tmdb/details/${encodeURIComponent(type)}/${encodeURIComponent(id)}`); },
     tmdbSearch(type, q, year){ const y = year!=null ? `&year=${encodeURIComponent(String(year))}` : ''; return req(`/api/tmdb/search/${encodeURIComponent(type)}?q=${encodeURIComponent(q)}${y}`); },
     tmdbCredits(type, id){ return req(`/api/tmdb/credits/${encodeURIComponent(type)}/${encodeURIComponent(id)}`); },
+    tmdbGenres(type){ return req(`/api/tmdb/genres/${encodeURIComponent(type)}`); },
+    tmdbDiscover(type, params){
+      const search = new URLSearchParams(params||{});
+      const qs = search.toString();
+      return req(`/api/tmdb/discover/${encodeURIComponent(type)}${qs?`?${qs}`:''}`);
+    },
 
     // admin
     admin: {

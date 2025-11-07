@@ -44,4 +44,26 @@ public class TmdbController {
         var res = http.get().uri(base).retrieve().toEntity(String.class);
         return ResponseEntity.status(res.getStatusCode()).headers(res.getHeaders()).body(res.getBody());
     }
+
+    @GetMapping("/genres/{type}")
+    public ResponseEntity<?> genres(@PathVariable String type, @RequestParam(defaultValue = "pt-BR") String language) {
+        if (apiKey == null || apiKey.isBlank()) return ResponseEntity.status(501).body("TMDB API key not configured");
+        String t = "series".equalsIgnoreCase(type) || "tv".equalsIgnoreCase(type) ? "tv" : "movie";
+        String url = String.format("https://api.themoviedb.org/3/genre/%s/list?api_key=%s&language=%s", t, apiKey, language);
+        var res = http.get().uri(url).retrieve().toEntity(String.class);
+        return ResponseEntity.status(res.getStatusCode()).headers(res.getHeaders()).body(res.getBody());
+    }
+
+    @GetMapping("/discover/{type}")
+    public ResponseEntity<?> discover(@PathVariable String type,
+                                      @RequestParam(value = "with_genres", required = false) String withGenres,
+                                      @RequestParam(value = "page", defaultValue = "1") int page,
+                                      @RequestParam(defaultValue = "pt-BR") String language) {
+        if (apiKey == null || apiKey.isBlank()) return ResponseEntity.status(501).body("TMDB API key not configured");
+        String t = "series".equalsIgnoreCase(type) || "tv".equalsIgnoreCase(type) ? "tv" : "movie";
+        String base = String.format("https://api.themoviedb.org/3/discover/%s?api_key=%s&language=%s&include_adult=false&page=%d", t, apiKey, language, Math.max(1, Math.min(500, page)));
+        if (withGenres != null && !withGenres.isBlank()) base += "&with_genres=" + java.net.URLEncoder.encode(withGenres, java.nio.charset.StandardCharsets.UTF_8);
+        var res = http.get().uri(base).retrieve().toEntity(String.class);
+        return ResponseEntity.status(res.getStatusCode()).headers(res.getHeaders()).body(res.getBody());
+    }
 }
