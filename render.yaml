@@ -1,9 +1,9 @@
 services:
   - type: web
     name: cinefile-backend
+    runtime: docker
     plan: free
-    buildCommand: ./mvnw -DskipTests=true clean package
-    startCommand: java -jar target/cinefile-backend-0.1.0.jar
+    dockerfilePath: ./backend/Dockerfile
     autoDeploy: true
     envVars:
       - key: DB_URL
