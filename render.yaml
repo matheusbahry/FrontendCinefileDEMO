@@ -1,9 +1,10 @@
 services:
   - type: web
     name: cinefile-backend
-    env: docker
-    dockerCommand: |
-      ./mvnw -DskipTests=true clean package && java -jar target/cinefile-backend-0.1.0.jar
+    plan: free
+    buildCommand: ./mvnw -DskipTests=true clean package
+    startCommand: java -jar target/cinefile-backend-0.1.0.jar
+    autoDeploy: true
     envVars:
       - key: DB_URL
         fromDatabase:
@@ -33,4 +34,3 @@ services:
 databases:
   - name: cinefile-db
     plan: free
-
