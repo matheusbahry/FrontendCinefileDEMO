@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: cinefile-backend
+    env: docker
+    dockerCommand: |
+      ./mvnw -DskipTests=true clean package && java -jar target/cinefile-backend-0.1.0.jar
+    envVars:
+      - key: DB_URL
+        fromDatabase:
+          name: cinefile-db
+          property: connectionString
+      - key: DB_USER
+        fromDatabase:
+          name: cinefile-db
+          property: user
+      - key: DB_PASS
+        fromDatabase:
+          name: cinefile-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TMDB_API_KEY
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://your-frontend-domain
+      - key: BOOTSTRAP_ADMIN
+        value: "true"
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: admin123
+    healthCheckPath: /actuator/health
+databases:
+  - name: cinefile-db
+    plan: free
+

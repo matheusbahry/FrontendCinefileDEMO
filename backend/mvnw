@@ -1,0 +1,20 @@
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Maven Wrapper Startup Script
+# Simplified for portability; downloads wrapper jar if missing.
+# ----------------------------------------------------------------------------
+set -e
+BASEDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+WRAPPER_JAR="$BASEDIR/.mvn/wrapper/maven-wrapper.jar"
+PROPS="$BASEDIR/.mvn/wrapper/maven-wrapper.properties"
+
+if [ ! -f "$WRAPPER_JAR" ]; then
+  URL=$(grep -E '^wrapperUrl=' "$PROPS" | sed -e 's/wrapperUrl=//')
+  mkdir -p "$BASEDIR/.mvn/wrapper"
+  echo "Downloading Maven Wrapper: $URL"
+  curl -fsSL "$URL" -o "$WRAPPER_JAR" || wget -q "$URL" -O "$WRAPPER_JAR"
+fi
+
+JAVA_EXE="${JAVA_HOME:+$JAVA_HOME/bin/}java"
+exec "$JAVA_EXE" -classpath "$WRAPPER_JAR" org.apache.maven.wrapper.MavenWrapperMain "$@"
+
