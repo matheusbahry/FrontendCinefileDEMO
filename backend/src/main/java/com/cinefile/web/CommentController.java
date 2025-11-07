@@ -26,10 +26,12 @@ public class CommentController {
     }
 
     @GetMapping("/comments/{type}/{tmdbId}")
-    public List<Map<String,Object>> list(@AuthenticationPrincipal User me, @PathVariable("type") String type, @PathVariable Long tmdbId) {
+    public List<Map<String,Object>> list(@AuthenticationPrincipal User me, @PathVariable("type") String type, @PathVariable Long tmdbId, @RequestParam(defaultValue = "50") int limit) {
         MediaType mt = "series".equalsIgnoreCase(type) ? MediaType.SERIES : MediaType.MOVIE;
+        int l = Math.max(1, Math.min(200, limit));
         return comments.findAllByMediaTypeAndTmdbIdOrderByCreatedAtDesc(mt, tmdbId)
                 .stream()
+                .limit(l)
                 .map(c -> Map.of(
                         "id", c.getId(),
                         "text", c.getText(),

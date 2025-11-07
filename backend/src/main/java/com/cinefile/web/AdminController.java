@@ -45,8 +45,14 @@ public class AdminController {
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         if (!users.existsById(id)) return ResponseEntity.notFound().build();
-        users.deleteById(id);
-        return ResponseEntity.ok(Map.of("deleted", true));
+        try {
+            users.deleteById(id);
+            return ResponseEntity.ok(Map.of("deleted", true));
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            return ResponseEntity.status(409).body(Map.of(
+                    "error", "user_has_related_data",
+                    "message", "Não é possível excluir usuário com dados relacionados (comentários, notas, watchlist)."
+            ));
+        }
     }
 }
-
