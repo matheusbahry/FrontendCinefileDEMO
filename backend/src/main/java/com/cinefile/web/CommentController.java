@@ -66,6 +66,10 @@ public class CommentController {
                 return ResponseEntity.status(403).build();
             }
             comments.delete(c);
+            // log delete
+            LogEntry le = new LogEntry();
+            le.setUser(user); le.setAction(ActionType.COMMENT_DELETE); le.setMediaType(c.getMediaType()); le.setTmdbId(c.getTmdbId());
+            logs.save(le);
             return ResponseEntity.ok(Map.of("deleted", true));
         }).orElse(ResponseEntity.notFound().build());
     }

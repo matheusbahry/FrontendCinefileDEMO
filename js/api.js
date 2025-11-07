@@ -65,6 +65,13 @@
     // TMDB proxy
     tmdbDetails(type, id){ return req(`/api/tmdb/details/${encodeURIComponent(type)}/${encodeURIComponent(id)}`); },
     tmdbSearch(type, q, year){ const y = year!=null ? `&year=${encodeURIComponent(String(year))}` : ''; return req(`/api/tmdb/search/${encodeURIComponent(type)}?q=${encodeURIComponent(q)}${y}`); },
+
+    // admin
+    admin: {
+      listUsers(){ return req('/api/admin/users'); },
+      setRole(id, role){ return req(`/api/admin/users/${encodeURIComponent(String(id))}/role`, { method:'PUT', body: JSON.stringify({ role }) }); },
+      deleteUser(id){ return req(`/api/admin/users/${encodeURIComponent(String(id))}`, { method:'DELETE' }); }
+    }
   };
 
   global.API = API;

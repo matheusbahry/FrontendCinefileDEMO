@@ -70,6 +70,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fallback TMDB: tenta via tmdb.js se existir, senão fetch direto
   async function fetchFromTMDBById(id) {
+    // 0) backend proxy se houver
+    try {
+      if (window.API && API.hasAPI) {
+        let data = await API.tmdbDetails('movie', id);
+        if (typeof data === 'string') data = JSON.parse(data);
+        if (data && data.id) return mapTMDBDetails(data, id);
+        data = await API.tmdbDetails('tv', id);
+        if (typeof data === 'string') data = JSON.parse(data);
+        if (data && data.id) return mapTMDBDetails(data, id);
+      }
+    } catch {}
     // 1) tmdb.js conhecido?
     try {
       if (window.TMDB) {

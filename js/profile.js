@@ -83,6 +83,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Busca por ID no TMDB usando tmdb.js se existir, senão fetch direto
   async function fetchFromTMDBById(id) {
+    // 0) via backend proxy se houver
+    try {
+      if (window.API && API.hasAPI) {
+        let data = await API.tmdbDetails('movie', id);
+        if (typeof data === 'string') data = JSON.parse(data);
+        if (data && data.id) return mapTMDBDetails(data, id);
+        data = await API.tmdbDetails('tv', id);
+        if (typeof data === 'string') data = JSON.parse(data);
+        if (data && data.id) return mapTMDBDetails(data, id);
+      }
+    } catch {}
     // 1) tmdb.js
     try {
       if (window.TMDB) {
@@ -272,6 +283,51 @@ document.addEventListener("DOMContentLoaded", () => {
         div.textContent = `${when.toLocaleString()} • ${action} • TMDB ${l.tmdbId}`;
         box.appendChild(div);
       });
+    } catch {}
+  })();
+
+  // ===== Admin painel (renderizado só para ROLE=ADMIN) =====
+  (async () => {
+    try {
+      if (!(window.API && API.hasAPI)) return;
+      const role = document.body.getAttribute('data-role');
+      if (role !== 'ADMIN') return;
+      const users = await API.admin.listUsers();
+      const sect = document.createElement('section');
+      sect.className = 'row';
+      sect.setAttribute('aria-label', 'Admin');
+      sect.innerHTML = `
+        <div class="row__head"><h2 class="row__title">Admin • Usuários</h2></div>
+        <div id="adminUsers" class="row__scroller" tabindex="0" style="display:grid;gap:8px"></div>
+      `;
+      document.querySelector('main.profile')?.appendChild(sect);
+      const box = sect.querySelector('#adminUsers');
+      function render(){
+        box.innerHTML='';
+        (users || []).forEach(u => {
+          const row = document.createElement('div');
+          row.style.display = 'grid';
+          row.style.gridTemplateColumns = '1fr auto auto';
+          row.style.gap = '8px';
+          const info = document.createElement('div');
+          info.textContent = `@${u.username} • ${u.email || ''}`;
+          const sel = document.createElement('select');
+          sel.innerHTML = '<option value="USER">USER</option><option value="ADMIN">ADMIN</option>';
+          sel.value = String(u.role || 'USER').toUpperCase();
+          sel.addEventListener('change', async ()=>{
+            try { const res = await API.admin.setRole(u.id, sel.value); u.role = res.role; }
+            catch {}
+          });
+          const del = document.createElement('button');
+          del.className = 'btn'; del.textContent = 'Excluir';
+          del.addEventListener('click', async ()=>{
+            try { await API.admin.deleteUser(u.id); const idx = users.findIndex(x=>x.id===u.id); if (idx>=0) users.splice(idx,1); render(); } catch {}
+          });
+          row.appendChild(info); row.appendChild(sel); row.appendChild(del);
+          box.appendChild(row);
+        });
+      }
+      render();
     } catch {}
   })();
 });
