@@ -79,6 +79,82 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
   `;
 
+  // Extra (TMDB: sinopse, elenco)
+  (async () => {
+    try {
+      if (!(window.API && API.hasAPI && item && item.tmdbId)) return;
+      const apiType = item.type === 'series' ? 'tv' : 'movie';
+      let details = await API.tmdbDetails(apiType, Number(item.tmdbId));
+      if (typeof details === 'string') details = JSON.parse(details);
+      const extra = document.createElement('div');
+      extra.className = 'details__extra';
+      const overview = details?.overview || '';
+      const runtime = details?.runtime || details?.episode_run_time?.[0] || '';
+      const meta = [];
+      if (runtime) meta.push(`${runtime} min`);
+      if (details?.number_of_seasons) meta.push(`${details.number_of_seasons} temporadas`);
+      extra.innerHTML = `
+        <div class="muted" style="margin-top:8px">${meta.join(' • ')}</div>
+        ${overview ? `<p style="margin-top:8px">${overview}</p>`: ''}
+        <div id="castBox" class="muted" style="margin-top:8px"></div>
+      `;
+      card.appendChild(extra);
+      try {
+        let credits = await API.tmdbCredits(apiType, Number(item.tmdbId));
+        if (typeof credits === 'string') credits = JSON.parse(credits);
+        const cast = (credits?.cast || []).slice(0,6).map(c => c.name).join(', ');
+        const crew = credits?.crew || [];
+        const directors = crew.filter(x => x.job==='Director').map(x=>x.name).slice(0,2).join(', ');
+        const castEl = extra.querySelector('#castBox');
+        let html = '';
+        if (directors) html += `<div><strong>Direção:</strong> ${directors}</div>`;
+        if (cast) html += `<div><strong>Elenco:</strong> ${cast}</div>`;
+        castEl.innerHTML = html;
+      } catch {}
+    } catch {}
+  })();
+
+  // Marcar como assistido (log)
+  (function(){
+    try {
+      if (!(window.API && API.hasAPI && item && item.tmdbId)) return;
+      const btn = document.createElement('button');
+      btn.className = 'btn auth-action'; btn.style.marginLeft='8px';
+      btn.textContent = 'Marcar como assistido';
+      document.querySelector('.details__actions')?.appendChild(btn);
+      btn.addEventListener('click', async (e)=>{
+        e.preventDefault();
+        const mt = item.type === 'series' ? 'SERIES' : 'MOVIE';
+        try { await API.addWatched(mt, Number(item.tmdbId)); btn.textContent='Assistido ✔'; btn.disabled=true; } catch {}
+      });
+    } catch {}
+  })();
+
+  // Avaliar temporada (séries)
+  ;(async function(){
+    try {
+      if (!(window.API && API.hasAPI && item && item.tmdbId && item.type==='series')) return;
+      let details = await API.tmdbDetails('tv', Number(item.tmdbId));
+      if (typeof details === 'string') details = JSON.parse(details);
+      const seasons = Array.isArray(details?.seasons) ? details.seasons : [];
+      if (!seasons.length) return;
+      const wrap = document.createElement('div');
+      wrap.style.marginTop = '10px';
+      wrap.innerHTML = `
+        <label style="display:block;margin-bottom:4px">Avaliar temporada</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="selSeason" class="form-select" style="width:auto"></select>
+          <div id="seasonStars" aria-label="Avalie temporada" role="radiogroup"></div>
+        </div>`;
+      card.appendChild(wrap);
+      const sel = wrap.querySelector('#selSeason');
+      seasons.forEach(s => { const o=document.createElement('option'); o.value=String(s.season_number); o.textContent=s.name||`Temporada ${s.season_number}`; sel.appendChild(o); });
+      const box = wrap.querySelector('#seasonStars');
+      const buttons=[]; const paint=n=>{buttons.forEach((b,i)=>b.textContent=(i<n)?'★':'☆');};
+      for(let i=1;i<=5;i++){ const b=document.createElement('button'); b.type='button'; b.className='btn'; b.textContent='☆'; b.addEventListener('click', async()=>{ try{ await API.rateSeason(Number(item.tmdbId), Number(sel.value||1), i); paint(i);}catch{} }); box.appendChild(b); buttons.push(b);} paint(0);
+    } catch {}
+  })();
+
   // Comentários (somente quando API está configurada; não altera layout base)
   try {
     if (window.API && API.hasAPI) {

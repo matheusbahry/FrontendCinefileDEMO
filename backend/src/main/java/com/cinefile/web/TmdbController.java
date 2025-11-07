@@ -15,6 +15,15 @@ public class TmdbController {
         this.apiKey = apiKey;
     }
 
+    @GetMapping("/credits/{type}/{id}")
+    public ResponseEntity<?> credits(@PathVariable String type, @PathVariable Long id) {
+        if (apiKey == null || apiKey.isBlank()) return ResponseEntity.status(501).body("TMDB API key not configured");
+        String t = "series".equalsIgnoreCase(type) || "tv".equalsIgnoreCase(type) ? "tv" : "movie";
+        String url = String.format("https://api.themoviedb.org/3/%s/%d/credits?api_key=%s", t, id, apiKey);
+        var res = http.get().uri(url).retrieve().toEntity(String.class);
+        return ResponseEntity.status(res.getStatusCode()).headers(res.getHeaders()).body(res.getBody());
+    }
+
     @GetMapping("/details/{type}/{id}")
     public ResponseEntity<?> details(@PathVariable String type, @PathVariable Long id, @RequestParam(defaultValue = "pt-BR") String language) {
         if (apiKey == null || apiKey.isBlank()) return ResponseEntity.status(501).body("TMDB API key not configured");
@@ -36,4 +45,3 @@ public class TmdbController {
         return ResponseEntity.status(res.getStatusCode()).headers(res.getHeaders()).body(res.getBody());
     }
 }
-

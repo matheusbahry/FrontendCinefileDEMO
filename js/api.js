@@ -65,6 +65,7 @@
     // TMDB proxy
     tmdbDetails(type, id){ return req(`/api/tmdb/details/${encodeURIComponent(type)}/${encodeURIComponent(id)}`); },
     tmdbSearch(type, q, year){ const y = year!=null ? `&year=${encodeURIComponent(String(year))}` : ''; return req(`/api/tmdb/search/${encodeURIComponent(type)}?q=${encodeURIComponent(q)}${y}`); },
+    tmdbCredits(type, id){ return req(`/api/tmdb/credits/${encodeURIComponent(type)}/${encodeURIComponent(id)}`); },
 
     // admin
     admin: {
@@ -72,6 +73,10 @@
       setRole(id, role){ return req(`/api/admin/users/${encodeURIComponent(String(id))}/role`, { method:'PUT', body: JSON.stringify({ role }) }); },
       deleteUser(id){ return req(`/api/admin/users/${encodeURIComponent(String(id))}`, { method:'DELETE' }); }
     }
+    ,
+    // watched
+    addWatched(mediaType, tmdbId, dateIso){ return req('/api/watched', { method:'POST', body: JSON.stringify({ mediaType, tmdbId, dateIso }) }); },
+    myWatched(limit=50){ return req(`/api/watched/me?limit=${encodeURIComponent(String(limit))}`); }
   };
 
   global.API = API;

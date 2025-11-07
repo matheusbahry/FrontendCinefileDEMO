@@ -45,6 +45,29 @@ document.addEventListener("DOMContentLoaded", () => {
       searchCount.textContent=`${found.length} resultado${found.length!==1?"s":""}`;
       rowSearch.hidden=false;
       renderBatch(scSearch, found, { showOverlay:false });
+
+      // Extra: buscar no TMDB via backend quando configurado e apendar resultados
+      (async () => {
+        try {
+          if (!(window.API && API.hasAPI)) return;
+          const tmdb = await API.tmdbSearch('movie', q);
+          const tv   = await API.tmdbSearch('tv', q);
+          let items = [];
+          function mapList(list, type){
+            const res = (list?.results||[]).slice(0,12).map(r => ({
+              id: String(r.id), tmdbId: Number(r.id), type: type==='tv' ? 'series' : 'movie',
+              title: r.title || r.name || '(sem título)',
+              year: (r.release_date || r.first_air_date || '').slice(0,4) || '',
+              poster: ''
+            }));
+            items.push(...res);
+          }
+          mapList(typeof tmdb==='string'? JSON.parse(tmdb): tmdb, 'movie');
+          mapList(typeof tv==='string'? JSON.parse(tv): tv, 'tv');
+          items.slice(0,24).forEach(item => scSearch.appendChild(createCarouselItem(item)));
+          searchCount.textContent = `${found.length + items.length} resultados`;
+        } catch {}
+      })();
     }, 250);
   });
 
@@ -113,4 +136,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 });
-

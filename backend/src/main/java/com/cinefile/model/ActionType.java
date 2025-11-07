@@ -5,5 +5,6 @@ public enum ActionType {
     WATCHLIST_ADD,
     WATCHLIST_REMOVE,
     COMMENT_ADD,
-    COMMENT_DELETE
+    COMMENT_DELETE,
+    WATCHED
 }

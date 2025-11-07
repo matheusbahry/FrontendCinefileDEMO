@@ -27,6 +27,44 @@ document.addEventListener("DOMContentLoaded", () => {
     avatarEl.onerror = () => { avatarEl.src = "assets/picfoto.png"; };
   }
 
+  // ===== Edição de perfil (backend): username e avatarUrl =====
+  (function setupProfileEdit(){
+    try {
+      if (!(window.API && API.hasAPI)) return;
+      const main = document.querySelector('main.profile');
+      const sect = document.createElement('section');
+      sect.className = 'row';
+      sect.setAttribute('aria-label', 'Editar perfil');
+      sect.innerHTML = `
+        <div class="row__head"><h2 class="row__title">Editar perfil</h2></div>
+        <form id="pfEdit" class="login__form" style="max-width:420px">
+          <input id="pf_username" type="text" placeholder="Novo nome de usuário" minlength="3" maxlength="50"/>
+          <input id="pf_avatar" type="url" placeholder="URL do avatar" />
+          <button type="submit" class="btn">Salvar</button>
+          <div id="pfEditState" class="muted" style="padding-top:6px"></div>
+        </form>
+      `;
+      main?.appendChild(sect);
+      const form = sect.querySelector('#pfEdit');
+      const u = sect.querySelector('#pf_username');
+      const a = sect.querySelector('#pf_avatar');
+      const s = sect.querySelector('#pfEditState');
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        try {
+          const payload = { username: (u.value||'').trim() || undefined, avatarUrl: (a.value||'').trim() || undefined };
+          const res = await API.updateProfile(payload);
+          if (res && res.username) try { localStorage.setItem('cinefile_username', res.username); } catch {}
+          if (res && res.avatarUrl && avatarEl) avatarEl.src = res.avatarUrl;
+          if (nameEl && res && res.username) nameEl.textContent = '@' + res.username;
+          s.textContent = 'Atualizado com sucesso.';
+        } catch (err) {
+          s.textContent = 'Falha ao atualizar.';
+        }
+      });
+    } catch {}
+  })();
+
   // ===== 3) Últimos avaliados =====
   const CATALOG  = (window.DATA || window.MOCK_DATA || []).slice();
   const indexById = new Map(CATALOG.map(obj => [String(obj.id), obj]));
